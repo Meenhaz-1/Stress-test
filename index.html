@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mobile Crash Lab</title>
+
+<style>
+body { margin:0; padding:18px; background:#0b0f14; color:#e6edf3; font-family:system-ui; }
+.card { background:#111824; border:1px solid #223045; padding:15px; border-radius:12px; margin-bottom:15px; }
+label { display:block; margin-top:12px; font-size:13px; }
+input {
+  width:100%; padding:8px; margin-top:5px;
+  background:#0d1420; color:white;
+  border:1px solid #2a3b55; border-radius:8px;
+}
+button {
+  margin-top:15px;
+  padding:10px 14px;
+  background:#1b2a40; color:white;
+  border:1px solid #2a3b55;
+  border-radius:8px;
+  cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+<h2>Mobile Crash Config</h2>
+
+<label>Image Batch Size</label>
+<input id="batch" type="number" value="15">
+
+<label>Scroll Speed (suggested 60)</label>
+<input id="scrollSpeed" type="number" value="60">
+
+<label>Video Cadence (0 = off, N = 1 after every N images)</label>
+<input id="videoCadence" type="number" value="0">
+
+<label>Canvas Cadence (0 = off, N = 1 after every N images)</label>
+<input id="canvasCadence" type="number" value="0">
+
+<button onclick="startRun()">Start Run</button>
+</div>
+
+<script>
+function startRun(){
+  const runId="run_"+Date.now().toString(36);
+  const qs=new URLSearchParams({
+    runId,
+    batch:batch.value,
+    scrollSpeed:scrollSpeed.value,
+    videoCadence:videoCadence.value,
+    canvasCadence:canvasCadence.value
+  });
+  window.open("run.html?"+qs.toString(),"_blank");
+}
+</script>
+
+</body>
+</html>
