@@ -1,148 +1,21 @@
-<!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Mobile Crash Run</title>
-
-<style>
-body { margin:0; background:#111; color:white; font-family:Arial; }
-.container { padding:12px; display:flex; flex-direction:column; gap:16px; }
-.item { position:relative; aspect-ratio:3/4; background:#333; border-radius:10px; overflow:hidden; }
-.item span { position:absolute; top:6px; left:6px; background:black; padding:3px 6px; font-size:11px; }
-img,canvas,video { width:100%; height:100%; object-fit:cover; }
-#hud {
-  position:fixed;
-  top:10px;
-  left:10px;
-  right:10px;
-  background:rgba(0,0,0,0.9);
-  padding:12px;
-  font-size:12px;
-  border-radius:10px;
-  z-index:99999;
-}
-button { margin-top:5px; }
-</style>
-</head>
-<body>
-
-<div id="hud"></div>
-<div class="container" id="container"></div>
-
 <script>
-const p=new URLSearchParams(location.search);
-
-const runId=p.get("runId");
-const batch=Number(p.get("batch"))||15;
-const scrollSpeed=Number(p.get("scrollSpeed"))||60;
-const videoCadence=Math.max(0,Number(p.get("videoCadence"))||0);
-const canvasCadence=Math.max(0,Number(p.get("canvasCadence"))||0);
-
-const W=900;
-const H=1200;
-
-let imageCount=0;
-let videoCount=0;
-let canvasCount=0;
-
-const container=document.getElementById("container");
-const hud=document.getElementById("hud");
-
-function addImage(){
-  imageCount++;
-
-  const div=document.createElement("div");
-  div.className="item";
-  div.innerHTML=`<span>Image ${imageCount}</span>
-  <img src="https://picsum.photos/${W}/${H}?random=${imageCount}" loading="eager" decoding="sync">`;
-  container.appendChild(div);
-
-  if(videoCadence>0 && imageCount % videoCadence === 0){
-    addVideo();
-  }
-
-  if(canvasCadence>0 && imageCount % canvasCadence === 0){
-    addCanvas();
-  }
-}
-
-function addVideo(){
-  videoCount++;
-  const div=document.createElement("div");
-  div.className="item";
-  div.innerHTML=`<span>Video ${videoCount}</span>`;
-  const v=document.createElement("video");
-  v.src="https://www.w3schools.com/html/mov_bbb.mp4";
-  v.autoplay=true; v.loop=true; v.muted=true; v.playsInline=true;
-  div.appendChild(v);
-  container.appendChild(div);
-}
-
-function addCanvas(){
-  canvasCount++;
-  const div=document.createElement("div");
-  div.className="item";
-  div.innerHTML=`<span>Canvas ${canvasCount}</span>`;
-  const c=document.createElement("canvas");
-  c.width=W; c.height=H;
-  div.appendChild(c);
-  container.appendChild(div);
-
-  const ctx=c.getContext("2d");
-
-  function draw(){
-    const buf=ctx.createImageData(W,H);
-    const d=buf.data;
-    for(let i=0;i<d.length;i+=4){
-      d[i]=Math.random()*255;
-      d[i+1]=Math.random()*255;
-      d[i+2]=Math.random()*255;
-      d[i+3]=255;
+    // Check if browser supports sessionStorage
+    if (typeof(Storage) !== "undefined") {
+        // Track the last visible image during autoscroll
+        window.addEventListener('scroll', function() {
+            const images = document.querySelectorAll('img');
+            let lastVisibleImage = null;
+            images.forEach((img) => {
+                const rect = img.getBoundingClientRect();
+                if (rect.top >= 0 && rect.bottom <= window.innerHeight) {
+                    lastVisibleImage = img.src;  // Store the src of the last visible image
+                }
+            });
+            if (lastVisibleImage) {
+                sessionStorage.setItem('lastVisibleImage', lastVisibleImage);
+            }
+        });
+    } else {
+        console.log('Session storage not supported');
     }
-    ctx.putImageData(buf,0,0);
-    requestAnimationFrame(draw);
-  }
-  draw();
-}
-
-// Continuous images (fixed 400ms)
-setInterval(()=>{
-  for(let i=0;i<batch;i++) addImage();
-},400);
-
-// Auto-scroll
-function autoScroll(){
-  window.scrollBy(0,scrollSpeed);
-  requestAnimationFrame(autoScroll);
-}
-autoScroll();
-
-// FPS monitor
-let last=performance.now(),fps=60;
-function monitor(){
-  const now=performance.now();
-  fps=1000/(now-last);
-  last=now;
-  requestAnimationFrame(monitor);
-}
-monitor();
-
-setInterval(()=>{
-  const pressure=fps<15?"CRITICAL":fps<30?"HIGH":fps<45?"ELEVATED":"STABLE";
-  hud.innerHTML=`
-    Run: ${runId}<br>
-    DOM Nodes: ${container.children.length}<br>
-    Images: ${imageCount}<br>
-    Canvas: ${canvasCount}<br>
-    Videos: ${videoCount}<br>
-    Ratios → video:${videoCadence||"OFF"} canvas:${canvasCadence||"OFF"}<br>
-    Scroll speed: ${scrollSpeed}<br>
-    FPS: ${fps.toFixed(1)}<br>
-    Pressure: ${pressure}<br>
-  `;
-},1000);
 </script>
-
-</body>
-</html>
